@@ -68,8 +68,16 @@ abstract public class DataStorageBase {
             Data data = field.getAnnotation(Data.class);
             String key = data.key();
             String json = DataStorageTool.getInstance().get(key, "");
+
+            //如果json为空，并且属性值不为空，则跳过
+            if (TextUtils.isEmpty(json) && this.getFieldValue(field) != null) {
+                continue;
+            }
+
+            Object object = JsonTool.getInstance().toObject(json, field.getType());
+
             //设置属性值
-            this.setFieldValue(field, JsonTool.getInstance().toObject(json, field.getType()));
+            this.setFieldValue(field, object);
         }
     }
 
