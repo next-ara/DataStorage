@@ -2,6 +2,9 @@ package com.next.module.datastorage;
 
 import android.text.TextUtils;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+
 /**
  * ClassName:数据存储基类
  *
@@ -11,11 +14,12 @@ import android.text.TextUtils;
  */
 abstract public class DataStorageBase {
 
-    //存储文件名
-    private static String storageFileName = "obj_json";
-
     //存储标识
-    private String storageFlag = "";
+    private String storageFlag;
+
+    public DataStorageBase(String storageFlag) {
+        this.storageFlag = storageFlag;
+    }
 
     /**
      * 保存数据
@@ -25,44 +29,108 @@ abstract public class DataStorageBase {
             return;
         }
 
-        String json = JsonTool.getInstance().toJson(this);
+        //获取所有注解属性
+        ArrayList<Field> fieldAnnotationList = this.getAllAnnotationFields();
+        if (fieldAnnotationList.isEmpty()) {
+            return;
+        }
 
-        DataStorageTool.getInstance()
-                .setFlag(this.storageFileName)
-                .put(this.storageFlag, json)
-                .save();
+        //设置标记
+        DataStorageTool.getInstance().setFlag(this.storageFlag);
+
+        for (Field field : fieldAnnotationList) {
+            Data data = field.getAnnotation(Data.class);
+            //获取属性值
+            Object obj = this.getFieldValue(field);
+
+            if (obj != null) {
+                DataStorageTool.getInstance().put(data.key(), JsonTool.getInstance().toJson(obj));
+            }
+        }
+
+        //保存
+        DataStorageTool.getInstance().save();
     }
 
     /**
-     * 创建对象
-     *
-     * @param storageFlag 存储标识
-     * @param c           类对象
-     * @return 数据存储对象
+     * 创建数据
      */
-    public static DataStorageBase creatObj(String storageFlag, Class c) {
-        String json = DataStorageTool.getInstance()
-                .setFlag(storageFileName)
-                .get(storageFlag, "{}");
+    protected void creatData() {
+        DataStorageTool.getInstance().setFlag(this.storageFlag);
 
-        DataStorageBase dataStorageBase = (DataStorageBase) JsonTool.getInstance().toObject(json, c);
-        dataStorageBase.setStorageFlag(storageFlag);
-        return dataStorageBase;
+        //获取所有注解属性
+        ArrayList<Field> fieldAnnotationList = this.getAllAnnotationFields();
+        if (fieldAnnotationList.isEmpty()) {
+            return;
+        }
+
+        for (Field field : fieldAnnotationList) {
+            Data data = field.getAnnotation(Data.class);
+            String key = data.key();
+            String json = DataStorageTool.getInstance().get(key, "");
+            //设置属性值
+            this.setFieldValue(field, JsonTool.getInstance().toObject(json, field.getType()));
+        }
     }
 
-    public String getStorageFileName() {
-        return storageFileName;
+    /**
+     * 获取所有注解属性列表
+     *
+     * @return 注解属性列表
+     */
+    private ArrayList<Field> getAllAnnotationFields() {
+        Class c = this.getClass();
+        ArrayList<Field> fieldAnnotationList = new ArrayList<>();
+        for (Field field : c.getDeclaredFields()) {
+            boolean isAnnotationPresent = field.isAnnotationPresent(Data.class);
+            if (isAnnotationPresent) {
+                fieldAnnotationList.add(field);
+            }
+        }
+
+        return fieldAnnotationList;
     }
 
-    public void setStorageFileName(String storageFileName) {
-        this.storageFileName = storageFileName;
+    /**
+     * 获取属性值
+     *
+     * @param field 属性
+     * @return 属性值
+     */
+    private Object getFieldValue(Field field) {
+        field.setAccessible(true);
+
+        try {
+            return field.get(this);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
+    /**
+     * 设置属性值
+     *
+     * @param field 属性
+     * @param value 属性值
+     */
+    private void setFieldValue(Field field, Object value) {
+        field.setAccessible(true);
+
+        try {
+            field.set(this, value);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取存储标识
+     *
+     * @return 存储标识
+     */
     public String getStorageFlag() {
-        return storageFlag;
-    }
-
-    public void setStorageFlag(String storageFlag) {
-        this.storageFlag = storageFlag;
+        return this.storageFlag;
     }
 }

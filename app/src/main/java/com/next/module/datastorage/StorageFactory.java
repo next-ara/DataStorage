@@ -65,6 +65,8 @@ public class StorageFactory {
      * @return 数据存储工厂对象
      */
     public StorageFactory register(DataStorageBase dataStorageBase) {
+        //创建数据
+        dataStorageBase.creatData();
         this.dataStorageMap.put(dataStorageBase.getStorageFlag(), dataStorageBase);
         return this;
     }
