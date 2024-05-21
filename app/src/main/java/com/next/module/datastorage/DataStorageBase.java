@@ -39,12 +39,12 @@ abstract public class DataStorageBase {
         DataStorageTool.getInstance().setFlag(this.storageFlag);
 
         for (Field field : fieldAnnotationList) {
-            Data data = field.getAnnotation(Data.class);
+            StorageField storageField = field.getAnnotation(StorageField.class);
             //获取属性值
             Object obj = this.getFieldValue(field);
 
             if (obj != null) {
-                DataStorageTool.getInstance().put(data.key(), JsonTool.getInstance().toJson(obj));
+                DataStorageTool.getInstance().put(storageField.key(), JsonTool.getInstance().toJson(obj));
             }
         }
 
@@ -65,8 +65,8 @@ abstract public class DataStorageBase {
         }
 
         for (Field field : fieldAnnotationList) {
-            Data data = field.getAnnotation(Data.class);
-            String key = data.key();
+            StorageField storageField = field.getAnnotation(StorageField.class);
+            String key = storageField.key();
             String json = DataStorageTool.getInstance().get(key, "");
 
             //如果json为空，并且属性值不为空，则跳过
@@ -90,7 +90,7 @@ abstract public class DataStorageBase {
         Class c = this.getClass();
         ArrayList<Field> fieldAnnotationList = new ArrayList<>();
         for (Field field : c.getDeclaredFields()) {
-            boolean isAnnotationPresent = field.isAnnotationPresent(Data.class);
+            boolean isAnnotationPresent = field.isAnnotationPresent(StorageField.class);
             if (isAnnotationPresent) {
                 fieldAnnotationList.add(field);
             }

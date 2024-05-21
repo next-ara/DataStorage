@@ -6,15 +6,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * ClassName:数据属性注解
+ * ClassName:存储属性注解
  *
  * @author Afton
  * @time 2024/5/21
  * @auditor
  */
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Data {
+public @interface StorageField {
 
     String key() default "";
 }
