@@ -44,7 +44,7 @@ abstract public class DataStorageBase {
             Object obj = this.getFieldValue(field);
 
             if (obj != null) {
-                DataStorageTool.getInstance().put(storageField.key(), JsonTool.getInstance().toJson(obj));
+                DataStorageTool.getInstance().put(storageField.value(), JsonTool.getInstance().toJson(obj));
             }
         }
 
@@ -66,7 +66,7 @@ abstract public class DataStorageBase {
 
         for (Field field : fieldAnnotationList) {
             StorageField storageField = field.getAnnotation(StorageField.class);
-            String key = storageField.key();
+            String key = storageField.value();
             String json = DataStorageTool.getInstance().get(key, "");
 
             //如果json为空，并且属性值不为空，则跳过
